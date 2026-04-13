@@ -1,86 +1,122 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Search as SearchIcon, X, Loader2 } from 'lucide-react'
-import { searchAll } from '../../services/musicApi'
+import { Search as SearchIcon, X, Loader2, Music2 } from 'lucide-react'
+import { searchYouTube, searchJamendo } from '../../services/musicApi'
 import { TrackRow } from '../TrackCard'
-import { useAppStore } from '../../store/usePlayerStore'
+import { useAppStore, usePlayerStore } from '../../store/usePlayerStore'
+
+const SUGGESTIONS = [
+  'Arijit Singh', 'AR Rahman', 'Diljit Dosanjh', 'Shreya Ghoshal',
+  'SPB', 'Asha Bhosle', 'Kishore Kumar', 'Sunidhi Chauhan',
+  'Lo-fi chill', 'Bollywood 2024', 'Tamil hits', 'Punjabi pop',
+  'Carnatic music', 'Sufi songs', 'Indie Hindi', 'K-pop'
+]
 
 export default function Search() {
   const { searchQuery, setSearchQuery, selectedLanguage } = useAppStore()
+  const { setCurrentTrack, addRecentlyPlayed } = usePlayerStore()
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [error, setError] = useState('')
   const inputRef = useRef(null)
   const debounceRef = useRef(null)
 
-  useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+  useEffect(() => { inputRef.current?.focus() }, [])
 
   useEffect(() => {
-    if (!searchQuery.trim()) { setResults([]); setSearched(false); return }
+    if (!searchQuery.trim()) { setResults([]); setSearched(false); setError(''); return }
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       setLoading(true)
+      setError('')
       try {
-        const all = await searchAll(searchQuery)
+        // YouTube is primary source - search with music intent
+        const [ytResults, jmResults] = await Promise.allSettled([
+          searchYouTube(`${searchQuery} song`, 20),
+          searchJamendo(searchQuery, 10),
+        ])
+        const yt = ytResults.status === 'fulfilled' ? ytResults.value : []
+        const jm = jmResults.status === 'fulfilled' ? jmResults.value : []
+        const all = [...yt, ...jm]
+        if (all.length === 0) setError('No results found. Try a different search term.')
         setResults(all)
         setSearched(true)
       } catch (e) {
+        setError('Search failed. Check your API key or internet connection.')
         console.error(e)
       } finally {
         setLoading(false)
       }
-    }, 600)
+    }, 500)
     return () => clearTimeout(debounceRef.current)
   }, [searchQuery])
 
   const filtered = selectedLanguage === 'all'
     ? results
-    : results.filter(t => t.language === selectedLanguage)
+    : results.filter(t => !t.language || t.language === selectedLanguage || t.language === 'unknown')
 
   const ytTracks = filtered.filter(t => t.source === 'youtube')
-  const scTracks = filtered.filter(t => t.source === 'soundcloud')
   const jmTracks = filtered.filter(t => t.source === 'jamendo')
 
+  function playAll(tracks) {
+    if (!tracks.length) return
+    tracks.forEach(t => addRecentlyPlayed(t))
+    setCurrentTrack(tracks[0], tracks, 0)
+  }
+
   return (
-    <div className="h-full overflow-y-auto px-6 py-6">
-      {/* Search input */}
-      <div className="relative mb-6 max-w-xl">
-        <SearchIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+    <div style={{ height: '100%', overflowY: 'auto', padding: '24px' }}>
+
+      {/* Search bar */}
+      <div style={{ position: 'relative', maxWidth: '560px', marginBottom: '24px' }}>
+        <SearchIcon size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
         <input
           ref={inputRef}
           type="text"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search songs, artists, languages..."
-          className="w-full bg-surface-elevated text-white placeholder-white/30 rounded-full px-10 py-3 text-sm outline-none focus:ring-1 focus:ring-white/30 border border-white/10"
+          style={{
+            width: '100%', background: '#242424', color: '#fff', border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '999px', padding: '12px 40px 12px 44px', fontSize: '14px', outline: 'none', boxSizing: 'border-box'
+          }}
+          onFocus={e => e.target.style.borderColor = 'rgba(255,255,255,0.3)'}
+          onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
         />
         {searchQuery && (
-          <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">
+          <button onClick={() => setSearchQuery('')}
+            style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)' }}>
             <X size={16} />
           </button>
         )}
       </div>
 
+      {/* Loading */}
       {loading && (
-        <div className="flex items-center gap-2 text-white/50 text-sm">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255,255,255,0.5)', fontSize: '13px', marginBottom: '16px' }}>
           <Loader2 size={16} className="animate-spin" />
-          Searching across YouTube, SoundCloud & Jamendo...
+          Searching YouTube & Jamendo...
         </div>
       )}
 
-      {!loading && searched && filtered.length === 0 && (
-        <p className="text-white/40 text-sm">No results found. Try a different language filter or query.</p>
+      {/* Error */}
+      {error && !loading && (
+        <p style={{ color: 'rgba(255,100,100,0.8)', fontSize: '13px', marginBottom: '16px' }}>{error}</p>
       )}
 
+      {/* Empty state + suggestions */}
       {!searched && !loading && (
-        <div className="text-center py-20">
-          <SearchIcon size={48} className="mx-auto text-white/10 mb-4" />
-          <p className="text-white/40">Search for songs in any Indian or international language</p>
-          <div className="flex flex-wrap gap-2 justify-center mt-4">
-            {['Arijit Singh', 'AR Rahman', 'Diljit Dosanjh', 'SPB', 'Lo-fi chill', 'Carnatic'].map(s => (
+        <div>
+          <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px', marginBottom: '16px' }}>
+            Search for any song, artist, or genre
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {SUGGESTIONS.map(s => (
               <button key={s} onClick={() => setSearchQuery(s)}
-                className="text-xs px-3 py-1.5 bg-surface-elevated rounded-full text-white/60 hover:text-white hover:bg-surface-overlay transition-colors">
+                style={{ fontSize: '12px', padding: '6px 14px', background: '#242424', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '999px', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}
+                onMouseEnter={e => e.target.style.color = '#fff'}
+                onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.6)'}
+              >
                 {s}
               </button>
             ))}
@@ -88,21 +124,50 @@ export default function Search() {
         </div>
       )}
 
-      {/* Results by source */}
-      {[
-        { label: '🔴 YouTube Music', tracks: ytTracks, color: 'text-red-400' },
-        { label: '🟠 SoundCloud', tracks: scTracks, color: 'text-orange-400' },
-        { label: '🟢 Jamendo (Free/CC)', tracks: jmTracks, color: 'text-green-400' },
-      ].map(({ label, tracks, color }) => tracks.length > 0 && (
-        <section key={label} className="mb-6">
-          <h2 className={`text-sm font-semibold mb-2 ${color}`}>{label}</h2>
-          <div className="space-y-0.5">
-            {tracks.map((track, i) => (
-              <TrackRow key={track.id} track={track} queue={tracks} index={i} showIndex />
+      {/* YouTube results */}
+      {ytTracks.length > 0 && (
+        <section style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#f87171' }}>🔴 YouTube Music ({ytTracks.length})</span>
+            <button onClick={() => playAll(ytTracks)}
+              style={{ fontSize: '12px', color: '#1DB954', background: 'none', border: 'none', cursor: 'pointer' }}>
+              Play all
+            </button>
+          </div>
+          <div>
+            {ytTracks.map((track, i) => (
+              <TrackRow key={track.id} track={track} queue={ytTracks} index={i} showIndex />
             ))}
           </div>
         </section>
-      ))}
+      )}
+
+      {/* Jamendo results */}
+      {jmTracks.length > 0 && (
+        <section style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#4ade80' }}>🟢 Jamendo — Free & Legal ({jmTracks.length})</span>
+            <button onClick={() => playAll(jmTracks)}
+              style={{ fontSize: '12px', color: '#1DB954', background: 'none', border: 'none', cursor: 'pointer' }}>
+              Play all
+            </button>
+          </div>
+          <div>
+            {jmTracks.map((track, i) => (
+              <TrackRow key={track.id} track={track} queue={jmTracks} index={i} showIndex />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* No results after search */}
+      {searched && !loading && filtered.length === 0 && !error && (
+        <div style={{ textAlign: 'center', paddingTop: '60px' }}>
+          <Music2 size={40} style={{ color: 'rgba(255,255,255,0.1)', margin: '0 auto 12px' }} />
+          <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>No results for "{searchQuery}"</p>
+          <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', marginTop: '4px' }}>Try a different language filter or spelling</p>
+        </div>
+      )}
     </div>
   )
 }

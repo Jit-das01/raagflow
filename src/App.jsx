@@ -18,19 +18,16 @@ function MainContent() {
 
 export default function App() {
   return (
-    <div className="flex flex-col h-screen bg-surface-base text-white">
-      {/* Main layout */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0f0f0f', color: '#fff', overflow: 'hidden' }}>
+      {/* Top: sidebar + main content */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <Sidebar />
-
-        {/* Content area */}
-        <main className="flex-1 bg-gradient-to-b from-surface-elevated to-surface-base overflow-hidden">
+        <main style={{ flex: 1, background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f0f 40%)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <MainContent />
         </main>
       </div>
 
-      {/* Player bar (always visible at bottom) */}
+      {/* Player — always at bottom, always visible */}
       <Player />
     </div>
   )

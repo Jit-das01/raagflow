@@ -1,5 +1,5 @@
 import React from 'react'
-import { Home, Search, Library, Heart, Clock, Music2, Plus } from 'lucide-react'
+import { Home, Search, Library, Heart, Music2, Plus } from 'lucide-react'
 import { useAppStore } from '../../store/usePlayerStore'
 
 const navItems = [
@@ -9,42 +9,48 @@ const navItems = [
 ]
 
 const languages = [
-  { code: 'all', label: 'All Languages' },
-  { code: 'hindi', label: 'Hindi' },
-  { code: 'english', label: 'English' },
-  { code: 'tamil', label: 'Tamil' },
-  { code: 'telugu', label: 'Telugu' },
-  { code: 'bengali', label: 'Bengali' },
-  { code: 'punjabi', label: 'Punjabi' },
-  { code: 'marathi', label: 'Marathi' },
-  { code: 'kannada', label: 'Kannada' },
-  { code: 'malayalam', label: 'Malayalam' },
+  { code: 'all', label: '🌍 All Languages' },
+  { code: 'hindi', label: '🇮🇳 Hindi' },
+  { code: 'english', label: '🇬🇧 English' },
+  { code: 'tamil', label: '🎭 Tamil' },
+  { code: 'telugu', label: '🌿 Telugu' },
+  { code: 'bengali', label: '🐟 Bengali' },
+  { code: 'punjabi', label: '🌾 Punjabi' },
+  { code: 'marathi', label: '🦁 Marathi' },
+  { code: 'kannada', label: '🐘 Kannada' },
+  { code: 'malayalam', label: '🌴 Malayalam' },
 ]
 
 export default function Sidebar() {
   const { activePage, setActivePage, selectedLanguage, setLanguage, likedSongs, recentlyPlayed } = useAppStore()
 
   return (
-    <aside className="w-60 flex-shrink-0 bg-black flex flex-col h-full overflow-hidden">
+    <aside style={{ width: '220px', flexShrink: 0, background: '#000', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+
       {/* Logo */}
-      <div className="px-6 py-6">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-brand rounded-full flex items-center justify-center">
-            <Music2 size={16} className="text-black" />
+      <div style={{ padding: '20px 20px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '32px', height: '32px', background: '#1DB954', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Music2 size={16} color="#000" />
           </div>
-          <span className="font-bold text-lg tracking-tight">RaagFlow</span>
+          <span style={{ fontWeight: 700, fontSize: '18px', letterSpacing: '-0.5px' }}>RaagFlow</span>
         </div>
+        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', marginLeft: '42px' }}>Free • Forever</p>
       </div>
 
-      {/* Main nav */}
-      <nav className="px-3 mb-6">
+      {/* Nav */}
+      <nav style={{ padding: '0 12px 16px' }}>
         {navItems.map(({ id, icon: Icon, label }) => (
-          <button
-            key={id}
-            onClick={() => setActivePage(id)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-              activePage === id ? 'text-white' : 'text-white/60 hover:text-white'
-            }`}
+          <button key={id} onClick={() => setActivePage(id)}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
+              padding: '10px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: activePage === id ? 600 : 400,
+              color: activePage === id ? '#fff' : 'rgba(255,255,255,0.6)',
+              background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+              transition: 'color 0.15s'
+            }}
+            onMouseEnter={e => { if (activePage !== id) e.currentTarget.style.color = '#fff' }}
+            onMouseLeave={e => { if (activePage !== id) e.currentTarget.style.color = 'rgba(255,255,255,0.6)' }}
           >
             <Icon size={20} strokeWidth={activePage === id ? 2.5 : 1.5} />
             {label}
@@ -52,41 +58,50 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Library section */}
-      <div className="flex-1 overflow-y-auto px-3 space-y-1">
-        <div className="flex items-center justify-between px-3 mb-2">
-          <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">Library</span>
-          <button className="text-white/40 hover:text-white transition-colors" title="Create playlist">
-            <Plus size={16} />
+      {/* Library */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', marginBottom: '8px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Library</span>
+          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)' }} title="Create playlist">
+            <Plus size={15} />
           </button>
         </div>
 
         {/* Liked songs */}
-        <button
-          onClick={() => setActivePage('liked')}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-            activePage === 'liked' ? 'bg-surface-elevated text-white' : 'text-white/60 hover:text-white hover:bg-surface-raised'
-          }`}
-        >
-          <div className="w-9 h-9 rounded bg-gradient-to-br from-purple-700 to-brand flex items-center justify-center flex-shrink-0">
+        <button onClick={() => setActivePage('liked')}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
+            padding: '8px 12px', borderRadius: '6px', background: activePage === 'liked' ? '#242424' : 'none',
+            border: 'none', cursor: 'pointer', textAlign: 'left', marginBottom: '2px'
+          }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '6px', background: 'linear-gradient(135deg, #450af5, #1DB954)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Heart size={14} fill="white" stroke="none" />
           </div>
-          <div className="min-w-0 text-left">
-            <p className="font-medium text-sm line-clamp-1">Liked Songs</p>
-            <p className="text-xs text-white/40">{likedSongs.length} songs</p>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: '13px', fontWeight: 500, color: '#fff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Liked Songs</p>
+            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>{likedSongs.length} songs</p>
           </div>
         </button>
 
         {/* Recently played */}
         {recentlyPlayed.length > 0 && (
           <>
-            <p className="text-xs text-white/40 px-3 pt-4 pb-1 uppercase tracking-wider font-semibold">Recent</p>
+            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', padding: '12px 12px 4px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Recent</p>
             {recentlyPlayed.slice(0, 5).map(track => (
-              <button key={track.id} className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/60 hover:text-white hover:bg-surface-raised transition-colors">
-                <img src={track.thumbnail} alt="" className="w-9 h-9 rounded object-cover flex-shrink-0" />
-                <div className="min-w-0 text-left">
-                  <p className="line-clamp-1 text-sm">{track.title}</p>
-                  <p className="text-xs text-white/40 line-clamp-1">{track.artist}</p>
+              <button key={track.id}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 12px', borderRadius: '6px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#242424'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                onClick={() => {
+                  const { setCurrentTrack } = require('../../store/usePlayerStore').usePlayerStore.getState()
+                  setCurrentTrack(track, [track], 0)
+                }}
+              >
+                <img src={track.thumbnail} alt="" style={{ width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }}
+                  onError={e => e.target.style.display = 'none'} />
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: '12px', color: '#fff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.title}</p>
+                  <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.artist}</p>
                 </div>
               </button>
             ))}
@@ -95,23 +110,34 @@ export default function Sidebar() {
       </div>
 
       {/* Language filter */}
-      <div className="px-3 py-4 border-t border-white/10">
-        <p className="text-xs text-white/40 uppercase tracking-wider font-semibold px-3 mb-2">Language</p>
-        <div className="space-y-0.5 max-h-48 overflow-y-auto">
+      <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', padding: '4px 12px 6px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Language</p>
+        <div style={{ maxHeight: '160px', overflowY: 'auto' }}>
           {languages.map(({ code, label }) => (
-            <button
-              key={code}
-              onClick={() => setLanguage(code)}
-              className={`w-full text-left px-3 py-1.5 rounded text-xs transition-colors ${
-                selectedLanguage === code
-                  ? 'text-brand font-medium'
-                  : 'text-white/50 hover:text-white'
-              }`}
-            >
+            <button key={code} onClick={() => setLanguage(code)}
+              style={{
+                width: '100%', textAlign: 'left', padding: '5px 12px', borderRadius: '4px',
+                fontSize: '12px', fontWeight: selectedLanguage === code ? 600 : 400,
+                color: selectedLanguage === code ? '#1DB954' : 'rgba(255,255,255,0.5)',
+                background: 'none', border: 'none', cursor: 'pointer'
+              }}>
               {label}
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Credit — designed & developed by Jit Das */}
+      <div style={{ padding: '10px 16px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
+        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', margin: 0, lineHeight: 1.6 }}>
+          Designed & Developed by
+        </p>
+        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: 0, fontWeight: 600, letterSpacing: '0.02em' }}>
+          Jit Das
+        </p>
+        <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.15)', margin: '2px 0 0', letterSpacing: '0.03em' }}>
+          github.com/Jit-das01
+        </p>
       </div>
     </aside>
   )
