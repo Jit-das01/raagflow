@@ -1,6 +1,6 @@
 import React from 'react'
 import { Play, Heart, MoreHorizontal } from 'lucide-react'
-import { usePlayerStore, useAppStore } from '../../store/usePlayerStore'
+import { usePlayerStore, useAppStore } from '../store/usePlayerStore'
 
 export function TrackCard({ track, queue = [], index = 0 }) {
   const { setCurrentTrack, currentTrack, isPlaying } = usePlayerStore()
